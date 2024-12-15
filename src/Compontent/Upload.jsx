@@ -4,9 +4,8 @@ import Webcam from '@uppy/webcam';
 import XHRUpload from '@uppy/xhr-upload';
 import { Dashboard } from '@uppy/react';
 import FileInput from '@uppy/file-input';
-import GoggleDrive from '@uppy/google-drive';
+import GoogleDrive from '@uppy/google-drive';
 import Dropbox from '@uppy/dropbox';
-
 import '@uppy/core/dist/style.min.css';
 import '@uppy/dashboard/dist/style.min.css';
 import '@uppy/webcam/dist/style.min.css';
@@ -16,50 +15,38 @@ const Upload = () => {
   const [uppy] = useState(() =>
     new Uppy({
       debug: true,
-      autoProceed: false, // Prevent auto-upload
+      autoProceed: false,
     })
       .use(Webcam)
       .use(FileInput)
       .use(XHRUpload, {
-        endpoint: 'https://your-server.com/upload', // Replace with your server endpoint
-        fieldName: 'file', // Field name in the form data
+        endpoint: '/api/upload', // Server endpoint
+        fieldName: 'file',
         headers: {
-          authorization: 'Bearer YOUR_TOKEN', // Optional, for authorization if needed
+          authorization: 'Bearer YOUR_TOKEN', // Optional authorization
         },
       })
-      .use(GoggleDrive, { 
-        companionUrl: 'https://companion.uppy.io', // Replace with your Companion instance URL
-      })
-      .use(Dropbox, { 
-        companionUrl: 'https://companion.uppy.io', // Replace with your Companion instance URL
-      })
+      .use(GoogleDrive, { companionUrl: 'https://companion.uppy.io' })
+      .use(Dropbox, { companionUrl: 'https://companion.uppy.io' })
   );
 
-  const [progress, setProgress] = useState(0);
-  const [tile, setTile] = useState('');
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
   useEffect(() => {
-    // Listen for upload progress
-    uppy.on('upload-progress', (file, progressData) => {
-      const { percentage } = progressData;
-      setProgress(percentage || 0); // Update progress state
-    });
-
     uppy.on('upload', () => {
       uppy.setMeta({
-        title: tile,
-        description: description,
+        title,
+        description,
       });
     });
 
     uppy.on('complete', () => {
       alert('Upload complete!');
-      setProgress(0); // Reset progress
+      setTitle('');
+      setDescription('');
     });
-
-   
-  }, [uppy,tile,description]);
+  }, [uppy, title, description]);
 
   const handleUpload = (e) => {
     e.preventDefault();
@@ -67,106 +54,44 @@ const Upload = () => {
       if (result.successful.length > 0) {
         alert('Upload successful!');
       } else {
-        alert('Upload failed');
+        alert('Upload failed.');
       }
     });
   };
 
   return (
     <>
-    <Navbar />
-
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      {/* Dashboard */}
-      <Dashboard uppy={uppy} showProgressDetails={true} /> 
-
-      {/* Form */}
-      <form onSubmit={handleUpload}>
-        <input type="text"
-        placeholder='Title' 
-        className='w-full  p-2  border-black rounded mt-4'
-        value={tile} onChange={(e)=>setTile(e.target.value)} />
-        <textarea name="" id="" 
-        className='w-full  p-2  border-gray-300 rounded mt-4'
-        placeholder='Description'
-        value={description} onChange={(e)=>setDescription(e.target.value)} >description</textarea>
-         <button
-        className="mt-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        type='submit'
-      >
-        submit
-      </button>
+      <Navbar />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4 text-white">
+        <Dashboard uppy={uppy} showProgressDetails height={300} width="100%" />
+        <form
+          onSubmit={handleUpload}
+          className="w-full max-w-md mt-6 flex flex-col gap-4"
+        >
+          <input
+            type="text"
+            placeholder="Title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full p-3 border border-gray-600 rounded bg-gray-800 text-white focus:outline-none focus:ring focus:ring-blue-400"
+          />
+          <textarea
+            placeholder="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows="4"
+            className="w-full p-3 border border-gray-600 rounded bg-gray-800 text-white focus:outline-none focus:ring focus:ring-blue-400"
+          />
+          <button
+            type="submit"
+            className="p-3 bg-blue-500 rounded hover:bg-blue-600 transition duration-300 text-white"
+          >
+            Upload
+          </button>
         </form>
-
-
-    </div>
+      </div>
     </>
   );
 };
 
 export default Upload;
-
-
-
-
-
-{/* 
-      Progress Bar 
-      <div className="w-full max-w-lg mt-4">
-        <div className="h-4 w-full bg-gray-200 rounded">
-          <div
-            className="h-full bg-blue-500 rounded transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-        <p className="text-center mt-2 text-sm text-gray-600">
-          {progress > 0 ? `Uploading: ${Math.round(progress)}%` : 'No uploads in progress'}
-        </p>
-      </div> */}
-
-      {/* Custom Upload Button */}
-      {/* <button
-        className="mt-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        onClick={handleUpload}
-      >
-        Upload Files
-      </button> */}
-
-
-
-// import React, { useState } from 'react';
-// import Uppy from '@uppy/core';
-// import Webcam from '@uppy/webcam';
-// import { Dashboard } from '@uppy/react';
-// import ProgressBar from '@uppy/progress-bar';  // Add this import
-// import FileInput from '@uppy/file-input'; // For using file input functionality
-
-// import '@uppy/core/dist/style.min.css';
-// import '@uppy/dashboard/dist/style.min.css';
-// import '@uppy/webcam/dist/style.min.css';
-// import '@uppy/progress-bar/dist/style.min.css'; // Add the CSS for ProgressBar
-
-// const Upload = () => {
-//   const [uppy] = useState(() => new Uppy().use(Webcam).use(ProgressBar).use(FileInput)); // Use FileInput plugin
-  
-//   const handleUpload = () => {
-//     uppy.upload().then((result) => {
-//       if (result.successful.length > 0) {
-//         alert('Upload successful!');
-//       } else {
-//         alert('Upload failed');
-//       }
-//     });
-//   };
-//   return (
-//     <div className=' flex items-center justify-center'>
-//       <Dashboard uppy={uppy}  />
-//       <div className="progress-bar-container mt-4 w-full max-w-lg"></div>
-//       <button 
-//          className="mt-4 p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-//       onClick={handleUpload}>Upload Files</button>
-//     </div>
-//   ) 
-// };
-
-// export default Upload;
