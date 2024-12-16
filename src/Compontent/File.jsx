@@ -20,7 +20,8 @@ const File = () => {
       setError(null);
       try {
         const response = await axios.get(`/api/search?q=${encodeURIComponent(search)}`);
-        setFiles(response.data.docs);
+        setFiles(response.data.docs || []);
+        console.log(response.data)
       } catch (err) {
         console.error('Error fetching data:', err.message);
         setError('Failed to fetch data. Please try again.');
@@ -47,10 +48,10 @@ const File = () => {
         </div>
 
         {loading && <p className="mt-4">Loading...</p>}
-        {error && <p className="mt-4 text-red-500">{error}</p>}
-        {!loading && !error && files.length === 0 && search && (
+         {error && <p className="mt-4 text-red-500">{error}</p>}
+        {files.length=== 0 && search && (
           <p className="mt-4">No results found.</p>
-        )}
+        )} 
 
         <div className="mt-8 w-full flex flex-col items-center">
           {files.map((file) => (

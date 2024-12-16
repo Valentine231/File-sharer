@@ -1,23 +1,32 @@
-// api/upload.js
+import express from 'express';
 import multer from 'multer';
-import nextConnect from 'next-connect';
+import axios from 'axios';
+import cors from 'cors';  
+import path from 'path';
 
+const app = express();
+const upload = multer({ storage: multer.memoryStorage() });
 
-const storage = multer.memoryStorage(); // Use in-memory storage for serverless environments
-const upload = multer({ storage });
+app.use(express.json());
+app.use(cors({ origin: '*' }));
 
-const apiRoute = nextConnect({
-  onError(error, req, res) {
-    res.status(501).json({ error: `Error: ${error.message}` });
-  },
-  onNoMatch(req, res) {
-    res.status(405).json({ error: `Method '${req.method}' Not Allowed` });
-  },
+app.use(express.static(path.join(__dirname, 'build')));
+
+app.get('/api/search', async (req, res) => {
+  const query = req.query.q;
+  if (!query) {
+    return res.status(400).json({ error: 'Search query is required.' });
+  }
+
+  try {
+    const response = await axios.get(`https://openlibrary.org/search.json?q=${query}`);
+    res.status(200).json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch data from OpenLibrary API.' });
+  }
 });
 
-apiRoute.use(upload.single('file'));
-
-apiRoute.post((req, res) => {
+app.post('/api/upload', upload.single('file'), (req, res) => {
   const file = req.file;
   if (!file) {
     return res.status(400).json({ error: 'No file uploaded!' });
@@ -28,4 +37,10 @@ apiRoute.post((req, res) => {
   });
 });
 
-export default apiRoute;
+const PORT = 3000; 
+
+app.listen(PORT, () => {
+  console.log(`Server is running at http://localhost:${PORT}`);
+});
+
+export default app;

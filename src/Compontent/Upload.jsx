@@ -63,32 +63,47 @@ const Upload = () => {
     <>
       <Navbar />
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4 text-white">
-        <Dashboard uppy={uppy} showProgressDetails height={300} width="100%" />
-        <form
-          onSubmit={handleUpload}
-          className="w-full max-w-md mt-6 flex flex-col gap-4"
-        >
-          <input
-            type="text"
-            placeholder="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full p-3 border border-gray-600 rounded bg-gray-800 text-white focus:outline-none focus:ring focus:ring-blue-400"
+        <div className="w-full max-w-4xl md:w-1/2">
+          {/* Dashboard Component */}
+          <Dashboard 
+            uppy={uppy} 
+            showProgressDetails 
+            height={300} 
+           
           />
-          <textarea
-            placeholder="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows="4"
-            className="w-full p-3 border border-gray-600 rounded bg-gray-800 text-white focus:outline-none focus:ring focus:ring-blue-400"
-          />
-          <button
-            type="submit"
-            className="p-3 bg-blue-500 rounded hover:bg-blue-600 transition duration-300 text-white"
+
+          {/* Form Section */}
+          <form
+            onSubmit={handleUpload}
+            className="w-full flex flex-col gap-6 p-4 bg-gray-800 shadow-lg rounded-md"
           >
-            Upload
-          </button>
-        </form>
+            {/* Title Input */}
+            <input
+              type="text"
+              placeholder="Title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full p-3 border border-gray-700 rounded bg-gray-900 text-white focus:outline-none focus:ring focus:ring-blue-500"
+            />
+
+            {/* Description Input */}
+            <textarea
+              placeholder="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows="4"
+              className="w-full p-3 border border-gray-700 rounded bg-gray-900 text-white focus:outline-none focus:ring focus:ring-blue-500"
+            />
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full p-3 bg-blue-600 rounded hover:bg-blue-700 transition duration-300 text-white text-center"
+            >
+              Upload
+            </button>
+          </form>
+        </div>
       </div>
     </>
   );
