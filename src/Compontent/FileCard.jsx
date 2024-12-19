@@ -1,64 +1,86 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { FaSearch } from 'react-icons/fa';
 
-const FileCard = ({ file }) => {
-  const handleDownload = (fileType) => {
-    // Assuming the API provides formats like PDF or ePub in the `formats` field
-    const downloadLink = file.formats ? file.formats[fileType] : null;
-    if (downloadLink) {
-      // Create a temporary anchor tag to trigger the download
-      const link = document.createElement('a');
-      link.href = downloadLink;
-      link.setAttribute('download', file.title); // Use the book's title as the filename
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link); // Clean up
-    } else {
-      alert(`Download link not available for ${fileType}`);
+const FileCard = ({ files }) => {
+  const [search, setSearch] = useState('');
+
+  // Filter files based on search input
+  const filteredFiles = files.filter((file) =>
+    file.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleDownload = (filename, fileUrl) => {
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    link.setAttribute('download', filename); // Set the download attribute with the filename
+    document.body.appendChild(link);
+    link.click(); // Trigger the click to start the download
+    document.body.removeChild(link); // Clean up the DOM
+  };
+
+  const handleDelete = (filename) => {
+    if (window.confirm(`Are you sure you want to delete "${filename}"?`)) {
+      // Notify parent to delete the file (if using external state management)
+      alert(`${filename} has been deleted.`);
     }
   };
 
-  const handleDelete = () => {
-    alert(`Deleted: ${file.title}`);
-    // Logic to handle file deletion can go here
-  };
-
   return (
-    <div className=" border border-blue-800 p-5 bg-gray-900 text-white rounded-lg shadow-md w-full max-w-md mx-auto mb-4">
-      <ul className="list-none">
-        <li className="p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition duration-300">
-          <strong className="text-lg text-blue-400">{file.title}</strong>
-          <br />
-          <span className="text-sm text-gray-300">
-            Author(s): {file.author_name ? file.author_name.join(', ') : 'Unknown author'}
-          </span>
-        
-        </li>
-        <div className='flex flex-row gap-4 mt-2'>
-        {file.formats && file.formats['application/pdf'] && (
-            <button
-              className='bg-green-500 rounded-lg p-2'
-              onClick={() => handleDownload('application/pdf')}
-            >
-              Download PDF
-            </button>
-          )}
+    <div className="p-5 bg-gray-900 text-white rounded-lg shadow-md w-full max-w-md mx-auto">
+      {/* Search Bar */}
+      <div className="flex items-center border border-gray-700 rounded-lg p-2 bg-gray-800 mb-4">
+        <FaSearch size={20} color="gray" className="mr-2" />
+        <input
+          type="text"
+          placeholder="Search files..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="bg-transparent outline-none w-full text-white"
+        />
+      </div>
 
-{file.formats && file.formats['application/epub+zip'] && (
-            <button
-              className='bg-blue-500 rounded-lg p-2'
-              onClick={() => handleDownload('application/epub+zip')}
-            >
-              Download ePub
-            </button>
-          )}
-          
-        <button onClick={handleDelete} className='bg-red-500 rounded-lg p-2'>Delete</button>
-        </div>
-       
+      {/* File List */}
+      <ul>
+        {filteredFiles.length > 0 ? (
+          filteredFiles.map((file, index) => (
+            <li key={index} className="p-2 border-b border-gray-700">
+              <div className="flex items-center">
+                {file.type.startsWith('image/') && (
+                  <img
+                    src={URL.createObjectURL(new Blob([file]))}
+                    alt={file.name}
+                    className="w-16 h-16 object-cover mr-4"
+                  />
+                )}
+                <div>
+                  <div className="font-bold">{file.name}</div>
+                  <div className="text-sm text-gray-400">{file.size} bytes</div>
+                  <div className="flex mt-2 space-x-2">
+                    <button
+                      onClick={() =>
+                        handleDownload(file.name, URL.createObjectURL(new Blob([file])))
+                      }
+                      className="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600"
+                    >
+                      Download
+                    </button>
+                    <button
+                      onClick={() => handleDelete(file.name)}
+                      className="bg-red-500 text-white rounded-lg px-4 py-2 hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </li>
+          ))
+        ) : (
+          <li className="text-gray-400 text-center py-4">No files found.</li>
+        )}
       </ul>
     </div>
   );
 };
 
 export default FileCard;
-

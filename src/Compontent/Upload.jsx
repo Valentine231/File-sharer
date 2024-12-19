@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Uppy from '@uppy/core';
 import Webcam from '@uppy/webcam';
 import XHRUpload from '@uppy/xhr-upload';
@@ -12,26 +13,35 @@ import '@uppy/webcam/dist/style.min.css';
 import Navbar from './Navbar';
 
 const Upload = () => {
+  const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const navigate = useNavigate();
+
+
   const [uppy] = useState(() =>
     new Uppy({
       debug: true,
       autoProceed: false,
+      restrictions: {
+        maxFileSize: 10485760, // 10 MB
+        allowedFileTypes: ['image/*', 'video/*'],
+        maxNumberOfFiles: 3,
+      },
     })
       .use(Webcam)
       .use(FileInput)
       .use(XHRUpload, {
-        endpoint: '/api/upload', // Server endpoint
+        endpoint: 'http://localhost:3000/api/upload', // Server endpoint
         fieldName: 'file',
         headers: {
-          authorization: 'Bearer YOUR_TOKEN', // Optional authorization
+          authorization: `Bearer ${localStorage.getItem('authToken')}`, // Optional authorization
         },
       })
       .use(GoogleDrive, { companionUrl: 'https://companion.uppy.io' })
       .use(Dropbox, { companionUrl: 'https://companion.uppy.io' })
   );
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+
 
   useEffect(() => {
     uppy.on('upload', () => {
@@ -41,23 +51,47 @@ const Upload = () => {
       });
     });
 
-    uppy.on('complete', () => {
+    uppy.on('complete', (result) => {
       alert('Upload complete!');
       setTitle('');
       setDescription('');
+
+      // Save uploaded files to localStorage
+      const uploadedFiles = result.successful.map(file => ({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        // Add any other properties you want to store
+      }));
+
+      // Get existing files from localStorage
+      const existingFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
+
+      // Combine existing files with newly uploaded files
+      const allFiles = [...existingFiles, ...uploadedFiles];
+
+      // Save back to localStorage
+      localStorage.setItem('uploadedFiles', JSON.stringify(allFiles));
+
+      // Navigate to the file page
+      navigate('/file');
     });
-  }, [uppy, title, description]);
+  }, [uppy, title, description, navigate]);
 
   const handleUpload = (e) => {
     e.preventDefault();
-    uppy.upload().then((result) => {
-      if (result.successful.length > 0) {
+    uppy.upload().then((uploadResult) => {
+      if (uploadResult.successful && uploadResult.successful.length > 0) {
         alert('Upload successful!');
       } else {
         alert('Upload failed.');
       }
+    }).catch((err) => {
+      console.error('Upload error:', err);
+      alert('An error occurred during the upload.');
     });
   };
+  
 
   return (
     <>

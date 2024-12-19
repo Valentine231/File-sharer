@@ -1,8 +1,13 @@
+// Backend: Express Server
 import express from 'express';
 import multer from 'multer';
 import axios from 'axios';
-import cors from 'cors';  
+import cors from 'cors';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -19,10 +24,20 @@ app.get('/api/search', async (req, res) => {
   }
 
   try {
-    const response = await axios.get(`https://openlibrary.org/search.json?q=${query}`);
-    res.status(200).json(response.data);
+    const response = await axios.get(`https://openlibrary.org/search.json?q=${query}&limit=10`);
+    const books = response.data.docs.map(book => ({
+      id: book.key, // Unique key
+      title: book.title,
+      author: book.author_name ? book.author_name.join(', ') : 'Unknown',
+      year: book.first_publish_year || 'N/A',
+      cover: book.cover_i ? `https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg` : null,
+    }));
+    res.status(200).json(books);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch data from OpenLibrary API.' });
+    res.status(500).json({
+      error: 'Failed to fetch data from OpenLibrary API.',
+      details: error.message,
+    });
   }
 });
 
@@ -37,7 +52,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   });
 });
 
-const PORT = 3000; 
+const PORT = 3000;
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
